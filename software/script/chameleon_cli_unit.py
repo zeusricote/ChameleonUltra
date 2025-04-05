@@ -1275,7 +1275,7 @@ class ItemGenerator:
 
     def __next__(self):
         size = len(self.rs)
-         if self.j >= size:
+        if self.j >= size:
             self.i += 1
             if self.i >= size - 1:
                  raise StopIteration
