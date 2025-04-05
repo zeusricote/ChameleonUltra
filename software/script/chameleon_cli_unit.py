@@ -1278,7 +1278,7 @@ class ItemGenerator:
         if self.j >= size:
             self.i += 1
             if self.i >= size - 1:
-                 raise StopIteration
+                raise StopIteration
             self.j = self.i + 1
         item_i, item_j = self.rs[self.i], self.rs[self.j]
         self.progress += 1
@@ -1297,20 +1297,20 @@ class ItemGenerator:
         return "{uid}-{nt}-{nr}-{ar}".format(**item)
 
 
-     def test_key(self, key, items = list()):
-         for item in self.rs:
-             item_key = self.key_from_item(item)
-             if item_key in self.found:
-                 continue
-             if (item in items) or (Crypto1.mfkey32_is_reader_has_key(
-                 int(item['uid'], 16),
-                 int(item['nt'], 16),
-                 int(item['nr'], 16),
-                 int(item['ar'], 16),
-                 key,
-             )):
-                 self.keys.add(key)
-                 self.found.add(item_key)
+    def test_key(self, key, items = list()):
+        for item in self.rs:
+            item_key = self.key_from_item(item)
+            if item_key in self.found:
+                continue
+            if (item in items) or (Crypto1.mfkey32_is_reader_has_key(
+                int(item['uid'], 16),
+                int(item['nt'], 16),
+                int(item['nr'], 16),
+                int(item['ar'], 16),
+                key,
+            )):
+                self.keys.add(key)
+                self.found.add(item_key)
 
 @hf_mf.command('elog')
 class HFMFELog(DeviceRequiredUnit):
