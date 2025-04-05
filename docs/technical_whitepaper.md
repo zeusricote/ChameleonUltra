@@ -1,3 +1,4 @@
+
 [nrf52_nfc_module_doc]: https://infocenter.nordicsemi.com/index.jsp?topic=%2Fcom.nordic.infocenter.nrf52832.ps.v1.1%2Fnfc.html
 
 [nxp_rc522_datasheet]: https://www.nxp.com/docs/en/data-sheet/MFRC522.pdf
@@ -34,7 +35,7 @@ functions have been realized with it!
 | Darkside     | MIFARE Classic |                       Support | Support                   |                Support                 |     Encrypted 4 bit NAck |
 | Nested       | MIFARE Classic |                       Support | Support                   |                Support                 |     PRNG(Distance guess) |
 | StaticNested | MIFARE Classic |                       Support | Support                   |                Support                 |   PRNG(2NT Fast Decrypt) |
-| HardNested   | MIFARE Classic |                       Support | Support                   |          Not yet implemented           |                       No |
+| HardNested   | MIFARE Classic |                       Support | Support                   |          Partially           |                       Only nonces adquisition, need pm3 client to decrypt |
 | Relay attack |   ISO14443A    |                       Support | Support                   |          Not yet implemented           |                       No |
 
 ## High Frequency emulation
@@ -42,10 +43,10 @@ functions have been realized with it!
 | Card Type                      |    Encoding Type     | Whether the hardware supports | Does the software support | Whether the application layer supports |                                     Note |
 |--------------------------------|:--------------------:|------------------------------:|---------------------------|:--------------------------------------:|-----------------------------------------:|
 | Other than ISO14443A           |          No          |                            No | No                        |                   No                   | [NRF52 NFC Module][nrf52_nfc_module_doc] |
-| NTAG 21x (210-218)             | ISO14443A/106 kbit/s |                       Support | Support                   |          Not yet implemented           |                                          |
-| MIFARE Ultralight              | ISO14443A/106 kbit/s |                       Support | Support                   |          Not yet implemented           |                                          |
-| MIFARE Ultralight Ev1          | ISO14443A/106 kbit/s |                       Support | Support                   |          Not yet implemented           |                                          |
-| MIFARE Ultralight C            | ISO14443A/106 kbit/s |                       Support | Support                   |          Not yet implemented           |                                          |
+| NTAG 21x (210-218)             | ISO14443A/106 kbit/s |                       Support | Support                   |          Support(Partially?)           |    210, 212, 213, 215, 216                                      |
+| MIFARE Ultralight              | ISO14443A/106 kbit/s |                       Support | Support                   |          Support           |                                          |
+| MIFARE Ultralight Ev1          | ISO14443A/106 kbit/s |                       Support | Support                   |          Support           |                                          |
+| MIFARE Ultralight C            | ISO14443A/106 kbit/s |                       Support | Support                   |          Suppport           |                                          |
 | MIFARE Classic1K/2K/4K (4B/7B) | ISO14443A/106 kbit/s |                       Support | Support                   |                Support                 |                                          |
 | MIFARE DESFire                 | ISO14443A High Rate  |       Only supported Low rate | Only supported Low rate   |          Not yet implemented           |                                          |
 | MIFARE DESFire EV1             | ISO14443A High rate  |       Only supported Low rate | Only supported Low rate   |          Not yet implemented           |                      Backward compatible |
@@ -57,10 +58,10 @@ functions have been realized with it!
 | Card Type                       |    Encoding Type     |                Whether the hardware supports | Does the software support                    | Whether the application layer supports |                                       Note |
 |---------------------------------|:--------------------:|---------------------------------------------:|----------------------------------------------|:--------------------------------------:|-------------------------------------------:|
 | Non <13.56MHz or ISO14443A>     |          No          |                                           No | No                                           |                   No                   | [NXP RC522 Datasheet][nxp_rc522_datasheet] |
-| NTAG 21x (210-218)              | ISO14443A/106 kbit/s |                                      Support | Support                                      |          Not yet implemented           |                                            |
-| MIFARE Ultralight               | ISO14443A/106 kbit/s |                                      Support | Support                                      |          Not yet implemented           |                                            |
-| MIFARE Ultralight Ev1           | ISO14443A/106 kbit/s |                                      Support | Support                                      |          Not yet implemented           |                                            |
-| MIFARE Ultralight C             | ISO14443A/106 kbit/s |                                      Support | Support                                      |          Not yet implemented           |                                            |
+| NTAG 21x (210-218)              | ISO14443A/106 kbit/s |                                      Support | Support                                      |          Support           |                    Writing page by page only                        |
+| MIFARE Ultralight               | ISO14443A/106 kbit/s |                                      Support | Support                                      |          Support           |                           Writing only page by page                |
+| MIFARE Ultralight Ev1           | ISO14443A/106 kbit/s |                                      Support | Support                                      |          Support           |                                   Writing page by page only         |
+| MIFARE Ultralight C             | ISO14443A/106 kbit/s |                                      Support | Support                                      |          Support           |                Writing page by page only                            |
 | MIFARE Classic 1K/2K/4K (4B/7B) | ISO14443A/106 kbit/s |                                      Support | Support                                      |                Support                 |                                            |
 | MIFARE DESFire                  | ISO14443A High Rate  | Supports low rates, or possibly higher rates | Supports low rates, or possibly higher rates |          Not yet implemented           |                                            |
 | MIFARE DESFire EV1              | ISO14443A High rate  | Supports low rates, or possibly higher rates | Supports low rates, or possibly higher rates |          Not yet implemented           |                        Backward compatible |
