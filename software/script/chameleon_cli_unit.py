@@ -895,7 +895,8 @@ class HFMFDarkside(ReaderRequiredUnit):
 class HFMFFCHK(ReaderRequiredUnit):
     def args_parser(self) -> ArgumentParserNoExit:
         parser = ArgumentParserNoExit()
-
+        parser.description = 'Mifare Classic key check'
+        
         mifare_type_group = parser.add_mutually_exclusive_group()
         mifare_type_group.add_argument('--mini', help='MIFARE Classic Mini / S20', action='store_const', dest='maxSectors', const=5)
         mifare_type_group.add_argument('--1k', help='MIFARE Classic 1k / S50 (default)', action='store_const', dest='maxSectors', const=16)

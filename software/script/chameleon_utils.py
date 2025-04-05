@@ -42,7 +42,7 @@ class ArgumentParserNoExit(argparse.ArgumentParser):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.add_help = False
-        self.description = "Please enter correct parameters"
+        self.description = "test"
         self.help_requested = False
 
     def exit(self, status: int = 0, message: Union[str, None] = None):
