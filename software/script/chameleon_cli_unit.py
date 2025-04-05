@@ -27,6 +27,18 @@ from chameleon_enum import MifareClassicWriteMode, MifareClassicPrngType, Mifare
 from chameleon_enum import AnimationMode, ButtonPressFunction, ButtonType, MfcValueBlockOperator
 from crypto1 import Crypto1
 
+# Get the directory of the current file (chameleon_cli_unit.py)
+current_dir = os.path.dirname(os.path.abspath(__file__))
+
+# Get the parent directory of the current file (the 'script' directory)
+script_dir = os.path.dirname(current_dir)
+
+# Add the 'script' directory to sys.path
+sys.path.append(script_dir)
+
+# Now you can use an absolute import
+import hardnested_utils  # Import the hardnested_utils module
+
 # NXP IDs based on https://www.nxp.com/docs/en/application-note/AN10833.pdf
 type_id_SAK_dict = {0x00: "MIFARE Ultralight Classic/C/EV1/Nano | NTAG 2xx",
                     0x08: "MIFARE Classic 1K | Plus SE 1K | Plug S 2K | Plus X 2K",
@@ -890,6 +902,83 @@ class HFMFDarkside(ReaderRequiredUnit):
             print(" - Key recover fail.")
         return
 
+@hf_mf.command('hardnested')
+class HFMFHardNested(ReaderRequiredUnit):
+    def __init__(self):
+        super().__init__()
+        self.nonces = []
+        self.responses = []
+
+    def args_parser(self) -> ArgumentParserNoExit:
+        parser = ArgumentParserNoExit()
+        parser.description = 'Mifare Classic Hardnested recover key'
+        parser.add_argument('--blk', '--known-block', type=int, required=True, metavar="<dec>",
+                            help="Known key block number")
+        srctype_group = parser.add_mutually_exclusive_group()
+        srctype_group.add_argument('-a', '-A', action='store_true', help="Known key is A key (default)")
+        srctype_group.add_argument('-b', '-B', action='store_true', help="Known key is B key")
+        parser.add_argument('-k', '--key', type=str, required=True, metavar="<hex>", help="Known key")
+        # tblk required because only single block mode is supported for now
+        parser.add_argument('--tblk', '--target-block', type=int, required=True, metavar="<dec>",
+                            help="Target key block number")
+        dsttype_group = parser.add_mutually_exclusive_group()
+        dsttype_group.add_argument('--ta', '--tA', action='store_true', help="Target A key (default)")
+        dsttype_group.add_argument('--tb', '--tB', action='store_true', help="Target B key")
+        parser.add_argument('--slow', type=int, required=False, default=0, metavar="<dec>",
+                            help="Slow mode for HardNested attack (default: 0)")
+        return parser
+
+    def on_exec(self, args: argparse.Namespace):
+        block_known = args.blk
+        # default to A
+        type_known = MfcKeyType.B if args.b else MfcKeyType.A
+        key_known: str = args.key
+        if not re.match(r"^[a-fA-F0-9]{12}$", key_known):
+            print("key must include 12 HEX symbols")
+            return
+        key_known_bytes = bytes.fromhex(key_known)
+        block_target = args.tblk
+        # default to A
+        type_target = MfcKeyType.B if args.tb else MfcKeyType.A
+        if block_known == block_target and type_known == type_target:
+            print(f"{CR}Target key already known{C0}")
+            return
+        print(f" - {C0}HardNested recover one key running...{C0}")
+        # collect nonces and responses
+        try:
+            resp = self.cmd.mf1_hard_nested_acquire(args.slow, block_known, type_known, key_known_bytes, block_target, type_target)
+        except Exception as e:
+            print(f"{CR}Error during HardNested acquisition: {e}{C0}")
+            return
+        
+        if resp is None:
+            print(f"{CR}Error: No data received from tag.{C0}")
+            return
+
+        # Parse the raw data into nonces and responses
+        self.nonces = []
+        self.responses = []
+        for i in range(0, len(resp), 8):
+            if i + 8 <= len(resp):  # Check if there are enough bytes
+                nt_enc, nt = struct.unpack("!II", resp[i:i+8])
+                self.nonces.append(nt)
+                self.responses.append(nt_enc)
+            else:
+                print(f"{CY}Warning: Incomplete data chunk at the end of response. Skipping.{C0}")
+                break  # Or handle the incomplete chunk as needed
+
+        # recover key
+        try:
+            key = hardnested_utils.recover_key(self.nonces, self.responses)
+        except Exception as e:
+            print(f"{CR}Error during key recovery: {e}{C0}")
+            return
+
+        if key is None:
+            print(f"{CY}No key found, you can retry.{C0}")
+        else:
+            print(f" - Block {block_target} Type {type_target.name} Key Found: {CG}{key}{C0}")
+        return
 
 @hf_mf.command('fchk')
 class HFMFFCHK(ReaderRequiredUnit):

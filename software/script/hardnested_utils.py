@@ -15,15 +15,15 @@ class Crypto1State:
         self.crypto1_init(key)
 
     def crypto1_init(self, key):
-        print(f"crypto1_init: key={key:012x}")
+        #print(f"crypto1_init: key={key:012x}")
         for i in range(47, 0, -2):
             self.odd = (self.odd << 1) | ((key >> ((i - 1) ^ 7)) & 1)
             self.even = (self.even << 1) | ((key >> (i ^ 7)) & 1)
-        print(f"crypto1_init: odd={self.odd:08x}, even={self.even:08x}")
+        #print(f"crypto1_init: odd={self.odd:08x}, even={self.even:08x}")
 
     def crypto1_bit(self, in_bit, is_encrypted):
         ret = self.filter(self.odd)
-        print(f"crypto1_bit: ret={ret}, odd={self.odd:08x}, even={self.even:08x}, in_bit={in_bit}, is_encrypted={is_encrypted}")
+        #print(f"crypto1_bit: ret={ret}, odd={self.odd:08x}, even={self.even:08x}, in_bit={in_bit}, is_encrypted={is_encrypted}")
         feedin = ret & is_encrypted
         feedin ^= in_bit
         feedin ^= (0x29CE5C & self.odd)
@@ -36,18 +36,18 @@ class Crypto1State:
 
     def crypto1_byte(self, in_byte, is_encrypted):
         ret = 0
-        print(f"crypto1_byte: in_byte={in_byte:02x}, is_encrypted={is_encrypted}")
+        #print(f"crypto1_byte: in_byte={in_byte:02x}, is_encrypted={is_encrypted}")
         for i in range(8):
             ret |= self.crypto1_bit((in_byte >> i) & 1, is_encrypted) << i
-        print(f"crypto1_byte: ret={ret:02x}")
+        #print(f"crypto1_byte: ret={ret:02x}")
         return ret
 
     def crypto1_word(self, in_word, is_encrypted):
         ret = 0
-        print(f"crypto1_word: in_word={in_word:08x}, is_encrypted={is_encrypted}")
+        #print(f"crypto1_word: in_word={in_word:08x}, is_encrypted={is_encrypted}")
         for i in range(32):
             ret |= self.crypto1_bit((in_word >> (i ^ 24)) & 1, is_encrypted) << (i ^ 24)
-        print(f"crypto1_word: ret={ret:08x}")
+        #print(f"crypto1_word: ret={ret:08x}")
         return ret
 
     def filter(self, x):
@@ -89,8 +89,7 @@ def load_bitflip_tables(directory="hardnested_tables"):
     tables_dir = os.path.join(script_dir, directory)
 
     if not os.path.exists(tables_dir):
-        print(f"Error: Directory '{tables_dir}' not found.")
-        return None
+        raise FileNotFoundError(f"Error: Directory '{tables_dir}' not found.")
 
     for filename in os.listdir(tables_dir):
         if filename.endswith(".bin.lz4"):
@@ -104,8 +103,7 @@ def load_bitflip_tables(directory="hardnested_tables"):
                         value = struct.unpack(">H", decompressed_data[i + 1:i + 3])[0]
                         bitflip_table[key] = value
             except Exception as e:
-                print(f"Error loading bitflip table '{filename}': {e}")
-                return None
+                raise RuntimeError(f"Error loading bitflip table '{filename}': {e}")
     return bitflip_table
 
 
@@ -116,11 +114,6 @@ def generate_keystream(state, length):
         keystream.append(state.crypto1_bit(0, 0))
     return keystream
 
-
-def test_key_candidate(key_candidate, nonces, responses, bitflip_table):
-    """Tests a key candidate against the collected nonces and responses."""
-    print(f"test_key_candidate: key_candidate={key_candidate:012x}")
-    state = Crypto1State(key_candidate)
 
 def test_key_candidate(key_candidate, nonces, responses, bitflip_table):
     """Tests a key candidate against the collected nonces and responses."""
@@ -152,7 +145,7 @@ def recover_key(nonces, responses, bitflip_table_directory="hardnested_tables"):
         if test_key_candidate(key_candidate, nonces, responses, bitflip_table):
             # Convert the integer key to bytes
             print(f"recover_key: Found key_candidate={key_candidate:012x}")
-            return key_candidate.to_bytes(6, byteorder='big')
+            return f"{key_candidate:012x}"
 
     return None  # Key not found
 
