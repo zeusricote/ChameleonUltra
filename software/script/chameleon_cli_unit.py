@@ -682,7 +682,6 @@ class HF14AScan(ReaderRequiredUnit):
     def on_exec(self, args: argparse.Namespace):
         self.scan()
 
-
 @hf_14a.command('info')
 class HF14AInfo(ReaderRequiredUnit):
     def args_parser(self) -> ArgumentParserNoExit:
@@ -3033,6 +3032,45 @@ class HFMFUEConfig(SlotIndexArgsAndGoUnit, HF14AAntiCollArgsUnit, DeviceRequired
             except:
                 pass
 
+@lf.command('scan')
+class LFScan(ReaderRequiredUnit):
+    def args_parser(self) -> ArgumentParserNoExit:
+        parser = ArgumentParserNoExit()
+        parser.description = 'Scan LF tag and print detailed information'
+        parser.add_argument('-t', '--tag-type', type=str, required=False, 
+                            help='Specify tag type to scan', 
+                            choices=['em410x', 't55xx', 'all'])
+        return parser
+
+    def on_exec(self, args: argparse.Namespace):
+        tag_type = args.tag_type if args.tag_type else 'all'
+        
+        try:
+            if tag_type in ['em410x', 'all']:
+                try:
+                    em_id = self.cmd.em410x_scan()
+                    print(f"{CG}EM410x Tag Detected:{C0}")
+                    print(f" - ID (Hex): {CG}{em_id.hex()}{C0}")
+                    print(f" - ID (Dec): {CG}{int(em_id.hex(), 16)}{C0}")
+                except Exception as e:
+                    if tag_type == 'em410x':
+                        print(f"{CR}No EM410x tag found: {str(e)}{C0}")
+            
+            if tag_type in ['t55xx', 'all']:
+                try:
+                    t55xx_info = self.cmd.t55xx_scan()
+                    print(f"{CG}T55xx Tag Detected:{C0}")
+                    print(f" - Config: {CG}{t55xx_info.get('config', 'Unknown')}{C0}")
+                    print(f" - Data: {CG}{t55xx_info.get('data', 'Unknown')}{C0}")
+                except Exception as e:
+                    if tag_type == 't55xx':
+                        print(f"{CR}No T55xx tag found: {str(e)}{C0}")
+            
+            if tag_type == 'all' and not any([tag_type in ['em410x', 't55xx']]):
+                print(f"{CY}No LF tags detected.{C0}")
+        
+        except Exception as e:
+            print(f"{CR}Error during LF scan: {str(e)}{C0}")
 
 @lf_em_410x.command('read')
 class LFEMRead(ReaderRequiredUnit):
