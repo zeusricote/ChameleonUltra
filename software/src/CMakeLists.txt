@@ -212,6 +212,37 @@ if (CMAKE_SYSTEM_NAME MATCHES "Windows")
     # No extra target_link_libraries needed here, ${LIBTHREAD} handles it
 endif()
 
+# FM11RF08S specific tools
+add_executable(staticnested_1nt ${COMMON_FILES} ${NESTED_UTIL} staticnested_1nt.c)
+target_include_directories(staticnested_1nt PRIVATE ${SRC_DIR})
+target_link_libraries(staticnested_1nt PRIVATE ${LIBTHREAD})
+if (CMAKE_SYSTEM_NAME MATCHES "Linux")
+    target_compile_definitions(staticnested_1nt PRIVATE _GNU_SOURCE)
+endif()
+if (CMAKE_SYSTEM_NAME MATCHES "Windows")
+    target_compile_definitions(staticnested_1nt PRIVATE HAVE_STRUCT_TIMESPEC)
+endif()
+
+add_executable(staticnested_2x1nt_rf08s ${COMMON_FILES} ${NESTED_UTIL} staticnested_2x1nt_rf08s.c)
+target_include_directories(staticnested_2x1nt_rf08s PRIVATE ${SRC_DIR})
+target_link_libraries(staticnested_2x1nt_rf08s PRIVATE ${LIBTHREAD})
+if (CMAKE_SYSTEM_NAME MATCHES "Linux")
+    target_compile_definitions(staticnested_2x1nt_rf08s PRIVATE _GNU_SOURCE)
+endif()
+if (CMAKE_SYSTEM_NAME MATCHES "Windows")
+    target_compile_definitions(staticnested_2x1nt_rf08s PRIVATE HAVE_STRUCT_TIMESPEC)
+endif()
+
+add_executable(staticnested_2x1nt_rf08s_1key ${COMMON_FILES} ${NESTED_UTIL} staticnested_2x1nt_rf08s_1key.c)
+target_include_directories(staticnested_2x1nt_rf08s_1key PRIVATE ${SRC_DIR})
+target_link_libraries(staticnested_2x1nt_rf08s_1key PRIVATE ${LIBTHREAD})
+if (CMAKE_SYSTEM_NAME MATCHES "Linux")
+    target_compile_definitions(staticnested_2x1nt_rf08s_1key PRIVATE _GNU_SOURCE)
+endif()
+if (CMAKE_SYSTEM_NAME MATCHES "Windows")
+    target_compile_definitions(staticnested_2x1nt_rf08s_1key PRIVATE HAVE_STRUCT_TIMESPEC)
+endif()
+
 
 add_executable(darkside ${COMMON_FILES} ${MFKEY_UTIL} darkside.c)
 target_include_directories(darkside PRIVATE ${SRC_DIR})
