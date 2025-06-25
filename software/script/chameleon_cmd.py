@@ -202,16 +202,17 @@ class ChameleonCMD:
         return resp
 
     @expect_response(Status.HF_TAG_OK)
-    def mf1_read_one_block(self, block, type_value: MfcKeyType, key):
+    def mf1_read_one_block(self, block, type_value: MfcKeyType, key, offset=0):
         """
         Read one mf1 block.
 
-        :param block:
-        :param type_value:
-        :param key:
-        :return:
+        :param block: Block number to read
+        :param type_value: Key type (MfcKeyType.A or MfcKeyType.B)
+        :param key: Key bytes (6 bytes)
+        :param offset: Authentication command byte offset (for backdoor keys)
+        :return: Block data
         """
-        data = struct.pack('!BB6s', type_value, block, key)
+        data = struct.pack('!BB6sB', type_value, block, key, offset)
         resp = self.device.send_cmd_sync(Command.MF1_READ_ONE_BLOCK, data)
         resp.parsed = resp.data
         return resp
@@ -284,7 +285,6 @@ class ChameleonCMD:
         2. Decrement: decrements value from source block and write to dest block
         3. Restore: copy value from source block and write to dest block
 
-
         :param src_block:
         :param src_type:
         :param src_key:
@@ -301,32 +301,34 @@ class ChameleonCMD:
         return resp
 
     @expect_response([Status.HF_TAG_OK, Status.HF_TAG_NO])
-    def mf1_check_keys_of_sectors(self, mask: bytes, keys: list[bytes]):
+    def mf1_check_keys_of_sectors(self, mask: bytes, keys: list[bytes], offset: int = 0):
         """
         Check keys of sectors.
-        :return:
+        :param mask: 10-byte mask indicating which sectors to check
+        :param keys: List of keys to check (each key is 6 bytes)
+        :param offset: Authentication command byte offset (for backdoor keys)
+        :return: Response with found keys and status
         """
         if len(mask) != 10:
             raise ValueError("len(mask) should be 10")
         if len(keys) < 1 or len(keys) > 83:
             raise ValueError("Invalid len(keys)")
-        data = struct.pack(f'!10s{6*len(keys)}s', mask, b''.join(keys))
+        # Pack mask, keys, and offset
+        data = struct.pack(f'!10s{6*len(keys)}sB', mask, b''.join(keys), offset)
 
         bitsCnt = 80 # maximum sectorKey_to_be_checked
         for b in mask:
             while b > 0:
-                [bitsCnt, b] = [bitsCnt - (b & 0b1), b >> 1]
-        if bitsCnt < 1:
-            # All sectorKey is masked
-            return chameleon_com.Response(
-                cmd=Command.MF1_CHECK_KEYS_OF_SECTORS, 
-                status=Status.HF_TAG_OK,
-                parsed={ 'status': Status.HF_TAG_OK },
-            )
-        # base timeout: 1s
-        # auth: len(keys) * sectorKey_to_be_checked * 0.1s
-        # read keyB from trailer block: 0.1s
-        timeout = 1 + (bitsCnt + 1) * len(keys) * 0.1
+                if b & 1:
+                    bitsCnt -= 1
+                b = b >> 1
+
+        # calculate timeout
+        # 1 sectorKey needs 1.6s (for 2 keys, 1 keyA and 1 keyB) in the worst case
+        # 1 sectorKey needs 0.3s (for 2 keys, 1 keyA and 1 keyB) in the best case
+        # so we set timeout to 1.0s per sectorKey
+        # and we need to add 1s for communication
+        timeout = bitsCnt * 1.0 + 1.0
 
         resp = self.device.send_cmd_sync(Command.MF1_CHECK_KEYS_OF_SECTORS, data, timeout=timeout)
         resp.parsed = { 'status': resp.status }

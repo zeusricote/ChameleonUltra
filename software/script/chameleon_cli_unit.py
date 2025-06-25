@@ -252,6 +252,7 @@ class MF1AuthArgsUnit(ReaderRequiredUnit):
         type_group.add_argument('-a', '-A', action='store_true', help="Known key is A key (default)")
         type_group.add_argument('-b', '-B', action='store_true', help="Known key is B key")
         parser.add_argument('-k', '--key', type=str, required=True, metavar="<hex>", help="tag sector key")
+        parser.add_argument('--offset', type=int, default=0, metavar="<dec>", help="Authentication command byte offset (for backdoor keys)")
         return parser
 
     def get_param(self, args):
@@ -263,6 +264,7 @@ class MF1AuthArgsUnit(ReaderRequiredUnit):
                 if not re.match(r"^[a-fA-F0-9]{12}$", key):
                     raise ArgsParserError("key must include 12 HEX symbols")
                 self.key: bytearray = bytearray.fromhex(key)
+                self.offset: int = args.offset
 
         return Param()
 
@@ -1351,18 +1353,19 @@ class HFMFFCHK(ReaderRequiredUnit):
         parser.add_argument('--export-dic', type=argparse.FileType('w', encoding='utf8'), help=f'Export result as .dic format, file will be {CR}OVERWRITTEN{C0} if exists')
 
         parser.add_argument('-m', '--mask', help='Which sectorKey to be skip, 1 bit per sectorKey. `0b1` represent to skip to check. (in hex[20] format)', type=str, default='00000000000000000000', metavar='<hex>')
+        parser.add_argument('--offset', type=int, default=0, metavar='<dec>', help='Authentication command byte offset (for backdoor keys)')
 
         parser.set_defaults(maxSectors=16)
         return parser
     
-    def check_keys(self, mask: bytearray, keys: list[bytes], chunkSize=20):
+    def check_keys(self, mask: bytearray, keys: list[bytes], chunkSize=20, offset=0):
         sectorKeys = dict()
 
         for i in range(0, len(keys), chunkSize):
             # print("mask = {}".format(mask.hex(sep=' ', bytes_per_sep=1)))
             chunkKeys = keys[i:i+chunkSize]
             print(f' - progress of checking keys... {CY}{i}{C0} / {len(keys)} ({CY}{100 * i / len(keys):.1f}{C0} %)')
-            resp = self.cmd.mf1_check_keys_of_sectors(mask, chunkKeys)
+            resp = self.cmd.mf1_check_keys_of_sectors(mask, chunkKeys, offset)
             # print(resp)
 
             if resp["status"] != Status.HF_TAG_OK:
@@ -1415,7 +1418,7 @@ class HFMFFCHK(ReaderRequiredUnit):
 
         # check keys
         startedAt = datetime.now()
-        sectorKeys = self.check_keys(mask, list(keys))
+        sectorKeys = self.check_keys(mask, list(keys), offset=args.offset)
         endedAt = datetime.now()
         duration = endedAt - startedAt
         print(f" - elapsed time: {CY}{duration.total_seconds():.3f}s{C0}")
@@ -1458,7 +1461,7 @@ class HFMFRDBL(MF1AuthArgsUnit):
 
     def on_exec(self, args: argparse.Namespace):
         param = self.get_param(args)
-        resp = self.cmd.mf1_read_one_block(param.block, param.type, param.key)
+        resp = self.cmd.mf1_read_one_block(param.block, param.type, param.key, param.offset)
         print(f" - Data: {resp.hex()}")
 
 

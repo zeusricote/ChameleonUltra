@@ -335,27 +335,33 @@ static data_frame_tx_t *cmd_processor_mf1_auth_one_key_block(uint16_t cmd, uint1
         uint8_t type;
         uint8_t block;
         uint8_t key[6];
+        uint8_t offset;
     } PACKED payload_t;
     if (length != sizeof(payload_t)) {
         return data_frame_make(cmd, STATUS_PAR_ERR, 0, NULL);
     }
 
     payload_t *payload = (payload_t *)data;
-    status = auth_key_use_522_hw(payload->block, payload->type, payload->key);
+    status = auth_key_use_522_hw(payload->block, payload->type, payload->key, payload->offset);
     pcd_14a_reader_mf1_unauth();
     return data_frame_make(cmd, status, 0, NULL);
 }
 
 static data_frame_tx_t *cmd_processor_mf1_check_keys_of_sectors(uint16_t cmd, uint16_t status, uint16_t length, uint8_t *data) {
-    if (length < 16 || (length - 10) % 6 != 0) {
+    if (length < 10 || (length - 10) % 6 != 1) {
         return data_frame_make(cmd, STATUS_PAR_ERR, 0, NULL);
     }
+
+    // Extract offset (last byte)
+    uint8_t offset = data[length - 1];
+    length--;  // Remove the offset byte from the length
 
     // init
     mf1_toolbox_check_keys_of_sectors_in_t in = {
         .mask = *(mf1_toolbox_check_keys_of_sectors_mask_t *) &data[0],
         .keys_len = (length - 10) / 6,
-        .keys = (mf1_key_t *) &data[10]
+        .keys = (mf1_key_t *) &data[10],
+        .offset = offset
     };
     mf1_toolbox_check_keys_of_sectors_out_t out;
     status = mf1_toolbox_check_keys_of_sectors(&in, &out);
@@ -400,12 +406,12 @@ static data_frame_tx_t *cmd_processor_mf1_hardnested_nonces_acquire(uint16_t cmd
     }
     return data_frame_make(cmd, status, nonces[0] * 4.5, (uint8_t *)(nonces + 1));
 }
-
 static data_frame_tx_t *cmd_processor_mf1_read_one_block(uint16_t cmd, uint16_t status, uint16_t length, uint8_t *data) {
     typedef struct {
         uint8_t type;
         uint8_t block;
         uint8_t key[6];
+        uint8_t offset;
     } PACKED payload_t;
     if (length != sizeof(payload_t)) {
         return data_frame_make(cmd, STATUS_PAR_ERR, 0, NULL);
@@ -413,7 +419,7 @@ static data_frame_tx_t *cmd_processor_mf1_read_one_block(uint16_t cmd, uint16_t 
 
     payload_t *payload = (payload_t *)data;
     uint8_t block[16] = { 0x00 };
-    status = auth_key_use_522_hw(payload->block, payload->type, payload->key);
+    status = auth_key_use_522_hw(payload->block, payload->type, payload->key, payload->offset);
     if (status != STATUS_HF_TAG_OK) {
         return data_frame_make(cmd, status, 0, NULL);
     }
@@ -429,6 +435,7 @@ static data_frame_tx_t *cmd_processor_mf1_write_one_block(uint16_t cmd, uint16_t
         uint8_t type;
         uint8_t block;
         uint8_t key[6];
+        uint8_t offset;
         uint8_t block_data[16];
     } PACKED payload_t;
     if (length != sizeof(payload_t)) {
@@ -436,7 +443,7 @@ static data_frame_tx_t *cmd_processor_mf1_write_one_block(uint16_t cmd, uint16_t
     }
 
     payload_t *payload = (payload_t *)data;
-    status = auth_key_use_522_hw(payload->block, payload->type, payload->key);
+    status = auth_key_use_522_hw(payload->block, payload->type, payload->key, payload->offset);
     if (status != STATUS_HF_TAG_OK) {
         return data_frame_make(cmd, status, 0, NULL);
     }

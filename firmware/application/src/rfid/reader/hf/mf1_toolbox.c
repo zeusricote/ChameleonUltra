@@ -1005,13 +1005,13 @@ uint8_t static_nested_recover_key(uint64_t keyKnown, uint8_t blkKnown, uint8_t t
 * @retval   : validationResults
 *
 */
-uint16_t auth_key_use_522_hw(uint8_t block, uint8_t type, uint8_t *key) {
+uint16_t auth_key_use_522_hw(uint8_t block, uint8_t type, uint8_t *key, uint8_t offset) {
     // Each verification of a block must re -find a card
     if (pcd_14a_reader_scan_auto(p_tag_info) != STATUS_HF_TAG_OK) {
         return STATUS_HF_TAG_NO;
     }
     // After finding the card, we start to verify!
-    return pcd_14a_reader_mf1_auth(p_tag_info, type, block, key);
+    return pcd_14a_reader_mf1_auth(p_tag_info, type + offset, block, key);
 }
 
 inline void mf1_toolbox_antenna_restart () {
@@ -1057,7 +1057,7 @@ uint16_t mf1_toolbox_check_keys_of_sectors (
                 mf1_toolbox_report_healthy();
                 if (status != STATUS_HF_TAG_OK) mf1_toolbox_antenna_restart();
 
-                status = auth_key_use_522_hw(trailerNo, PICC_AUTHENT1A, in->keys[j].key);
+                status = auth_key_use_522_hw(trailerNo, PICC_AUTHENT1A, in->keys[j].key, in->offset);
                 if (status != STATUS_HF_TAG_OK) { // auth failed
                     if (status == STATUS_HF_TAG_NO) return STATUS_HF_TAG_NO;
                     continue;
@@ -1082,7 +1082,7 @@ uint16_t mf1_toolbox_check_keys_of_sectors (
             mf1_toolbox_report_healthy();
             if (status != STATUS_HF_TAG_OK) mf1_toolbox_antenna_restart();
 
-            status = auth_key_use_522_hw(trailerNo, PICC_AUTHENT1B, in->keys[j].key);
+            status = auth_key_use_522_hw(trailerNo, PICC_AUTHENT1B, in->keys[j].key, in->offset);
             if (status != STATUS_HF_TAG_OK) { // auth failed
                 if (status == STATUS_HF_TAG_NO) return STATUS_HF_TAG_NO;
                 continue;

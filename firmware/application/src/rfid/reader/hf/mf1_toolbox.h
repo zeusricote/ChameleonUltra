@@ -69,6 +69,7 @@ typedef struct {
     mf1_toolbox_check_keys_of_sectors_mask_t mask;
     uint8_t keys_len;
     mf1_key_t *keys;
+    uint8_t offset;  // Authentication command byte offset (for backdoor keys)
 } mf1_toolbox_check_keys_of_sectors_in_t;
 
 typedef struct {
@@ -111,7 +112,7 @@ uint8_t static_nested_recover_key(NESTED_CORE_PARAM_DEF, mf1_static_nested_core_
 uint8_t check_prng_type(mf1_prng_type_t *type);
 uint8_t check_std_mifare_nt_support();
 void antenna_switch_delay(uint32_t delay_ms);
-uint16_t auth_key_use_522_hw(uint8_t block, uint8_t type, uint8_t *key);
+uint16_t auth_key_use_522_hw(uint8_t block, uint8_t type, uint8_t *key, uint8_t offset);
 
 uint16_t mf1_toolbox_check_keys_of_sectors (
     mf1_toolbox_check_keys_of_sectors_in_t *in,
