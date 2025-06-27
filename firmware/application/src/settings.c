@@ -53,6 +53,11 @@ void settings_init_ble_pairing_enable_config(void) {
     config.ble_pairing_enable = false;
 }
 
+// add on version6
+void settings_init_long_press_threshold_config(void) {
+    config.long_press_threshold = 1000; // default 1000ms
+}
+
 void settings_init_config(void) {
     settings_update_version_for_config();
     config.animation_config = SettingsAnimationModeFull; // add on version1
@@ -60,6 +65,7 @@ void settings_init_config(void) {
     settings_init_button_long_press_config();
     settings_init_ble_connect_key_config();
     settings_init_ble_pairing_enable_config();
+    settings_init_long_press_threshold_config();
 }
 
 void settings_migrate(void) {
@@ -80,12 +86,14 @@ void settings_migrate(void) {
         case 4:
             settings_init_ble_pairing_enable_config();
 
+        case 5:
+            settings_init_long_press_threshold_config();
+
             /*
              * Add new migration steps ABOVE THIS COMMENT
              * `settings_update_version_for_config()` and `break` statements should only be used on the last migration step, all the previous steps must fall
-             * through to the next case.
+             * through to the next step.
              */
-
             settings_update_version_for_config();
             break;
         default:
@@ -290,4 +298,17 @@ bool settings_get_ble_pairing_enable(void) {
 
 bool settings_get_ble_pairing_enable_first_load(void) {
     return m_ble_pairing_enable_first_load_value;
+}
+
+uint16_t settings_get_long_press_threshold(void) {
+    return config.long_press_threshold;
+}
+
+void settings_set_long_press_threshold(uint16_t duration) {
+    // Enforce minimum value of 200ms
+    if (duration < 200) {
+        duration = 200;
+    }
+    // Maximum value is implicitly handled by uint16_t
+    config.long_press_threshold = duration;
 }

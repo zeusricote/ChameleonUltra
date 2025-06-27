@@ -3281,6 +3281,37 @@ class HWDFU(DeviceRequiredUnit):
 
 
 @hw_settings.command('animation')
+@hw_settings.command('longpressthreshold')
+class HWSettingsLongPressThreshold(DeviceRequiredUnit):
+    def args_parser(self) -> ArgumentParserNoExit:
+        parser = ArgumentParserNoExit()
+        parser.description = 'Get or set the long press threshold in milliseconds (200-65535)'
+        group = parser.add_mutually_exclusive_group(required=True)
+        group.add_argument('-g', '--get', action='store_true', help='Get current long press threshold')
+        group.add_argument('-s', '--set', type=int, metavar='MS', help='Set long press threshold in milliseconds')
+        return parser
+
+    def on_exec(self, args: argparse.Namespace):
+        if args.get:
+            resp = self.cmd.get_long_press_threshold()
+            if resp.status == Status.SUCCESS:
+                print(f"Current long press threshold: {resp.parsed} ms")
+            else:
+                print(f"Failed to get long press threshold: {Status(resp.status)}")
+        elif args.set is not None:
+            if args.set < 200 or args.set > 65535:
+                print(f"{CR}Error: Long press threshold must be between 200 and 65535 milliseconds{C0}")
+                return
+            
+            resp = self.cmd.set_long_press_threshold(args.set)
+            if resp.status == Status.SUCCESS:
+                print(f"Successfully set long press threshold to {args.set} ms")
+                print(f"{CY}Do not forget to store your settings in flash!{C0}")
+            else:
+                print(f"Failed to set long press threshold: {Status(resp.status)}")
+
+
+@hw_settings.command('animation')
 class HWSettingsAnimation(DeviceRequiredUnit):
     def args_parser(self) -> ArgumentParserNoExit:
         parser = ArgumentParserNoExit()

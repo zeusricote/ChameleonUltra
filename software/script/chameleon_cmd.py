@@ -1050,6 +1050,27 @@ class ChameleonCMD:
         return self.device.send_cmd_sync(Command.MF0_NTAG_SET_WRITE_MODE, data)
 
     @expect_response(Status.SUCCESS)
+    def get_long_press_threshold(self):
+        """
+        Get the long press threshold in milliseconds
+        """
+        resp = self.device.send_cmd_sync(Command.GET_LONG_PRESS_THRESHOLD)
+        if resp.status == Status.SUCCESS:
+            resp.parsed, = struct.unpack('!H', resp.data)
+        return resp
+
+    @expect_response(Status.SUCCESS)
+    def set_long_press_threshold(self, threshold_ms: int):
+        """
+        Set the long press threshold in milliseconds
+        
+        Args:
+            threshold_ms: Threshold in milliseconds (200-65535)
+        """
+        data = struct.pack('!H', threshold_ms)
+        return self.device.send_cmd_sync(Command.SET_LONG_PRESS_THRESHOLD, data)
+
+    @expect_response(Status.SUCCESS)
     def get_ble_pairing_enable(self):
         """
         Is ble pairing enable?
