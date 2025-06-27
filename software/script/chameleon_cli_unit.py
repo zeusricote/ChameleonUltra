@@ -28,6 +28,7 @@ from chameleon_enum import Command, Status, SlotNumber, TagSenseType, TagSpecifi
 from chameleon_enum import MifareClassicWriteMode, MifareClassicPrngType, MifareClassicDarksideStatus, MfcKeyType
 from chameleon_enum import MifareUltralightWriteMode
 from chameleon_enum import AnimationMode, ButtonPressFunction, ButtonType, MfcValueBlockOperator
+from crypto1 import Crypto1
 
 # NXP IDs based on https://www.nxp.com/docs/en/application-note/AN10833.pdf
 type_id_SAK_dict = {0x00: "MIFARE Ultralight Classic/C/EV1/Nano | NTAG 2xx",
@@ -1709,32 +1710,34 @@ def _run_mfkey32v2(items):
 
 
 class ItemGenerator:
-    def __init__(self, rs, i=0, j=1):
-        self.rs = rs
+    def __init__(self, rs, uid_found_keys = set()):
+        self.rs: list = rs
+        self.progress = 0
         self.i = 0
         self.j = 1
         self.found = set()
         self.keys = set()
+        for known_key in uid_found_keys:
+            self.test_key(known_key)
 
     def __iter__(self):
         return self
 
     def __next__(self):
-        try:
-            item_i = self.rs[self.i]
-        except IndexError:
-            raise StopIteration
-        if self.key_from_item(item_i) in self.found:
+        size = len(self.rs)
+        if self.j >= size:
             self.i += 1
+            if self.i >= size - 1:
+                raise StopIteration
             self.j = self.i + 1
-            return next(self)
-        try:
-            item_j = self.rs[self.j]
-        except IndexError:
-            self.i += 1
-            self.j = self.i + 1
-            return next(self)
+        item_i, item_j = self.rs[self.i], self.rs[self.j]
+        self.progress += 1
         self.j += 1
+        if self.key_from_item(item_i) in self.found:
+            self.progress += max(0, size - self.j)
+            self.i += 1
+            self.j = self.i + 1
+            return next(self)
         if self.key_from_item(item_j) in self.found:
             return next(self)
         return item_i, item_j
@@ -1743,16 +1746,20 @@ class ItemGenerator:
     def key_from_item(item):
         return "{uid}-{nt}-{nr}-{ar}".format(**item)
 
-    def key_found(self, key, items):
-        self.keys.add(key)
-        for item in items:
-            try:
-                if item == self.rs[self.i]:
-                    self.i += 1
-                    self.j = self.i + 1
-            except IndexError:
-                break
-        self.found.update(self.key_from_item(item) for item in items)
+    def test_key(self, key, items = list()):
+        for item in self.rs:
+            item_key = self.key_from_item(item)
+            if item_key in self.found:
+                continue
+            if (item in items) or (Crypto1.mfkey32_is_reader_has_key(
+                int(item['uid'], 16),
+                int(item['nt'], 16),
+                int(item['nr'], 16),
+                int(item['ar'], 16),
+                key,
+            )):
+                self.keys.add(key)
+                self.found.add(item_key)
 
 
 @hf_mf.command('elog')
@@ -1765,30 +1772,25 @@ class HFMFELog(DeviceRequiredUnit):
         parser.add_argument('--decrypt', action='store_true', help="Decrypt key from MF1 log list")
         return parser
 
-    def decrypt_by_list(self, rs: list):
+    def decrypt_by_list(self, rs: list, uid_found_keys: set = set()):
         """
             Decrypt key from reconnaissance log list
 
         :param rs:
         :return:
         """
-        global _MFKEY32V2_RUNNER
-        msg1 = "[ " + " " * len(str(len(rs))) + " / " + str(len(rs)) + " ]"
-        msg2 = " key(s) found"
-        n = 1
-        gen = ItemGenerator(rs)
-        with Pool(
-            processes=cpu_count(),
-            initializer=_init_mfkey32v2_run,
-        ) as pool:
+        from multiprocessing import Pool, cpu_count
+        msg1 = f"  > {len(rs)} records => "
+        msg2 = f"/{(len(rs)*(len(rs)-1))//2} combinations. "
+        msg3 = " key(s) found"
+        gen = ItemGenerator(rs, uid_found_keys)
+        print(f"{msg1}{gen.progress}{msg2}{len(gen.keys)}{msg3}\r", end="")
+        with Pool(cpu_count()) as pool:
             for result in pool.imap(_run_mfkey32v2, gen):
-                # TODO: if some keys already recovered, test them on item before running mfkey32 on item
                 if result is not None:
-                    gen.key_found(*result)
-                print(f"{msg1}{n}{msg2}{len(gen.keys)}{msg3}\r", end="")
-                n += 1
-            pool.imap(_run_mfkey32v2, [[]] * cpu_count())
-        print()
+                    gen.test_key(*result)
+                print(f"{msg1}{gen.progress}{msg2}{len(gen.keys)}{msg3}\r", end="")
+        print(f"{msg1}{gen.progress}{msg2}{len(gen.keys)}{msg3}")
         return gen.keys
 
     @staticmethod
@@ -1832,14 +1834,16 @@ class HFMFELog(DeviceRequiredUnit):
 
         for uid, result_maps_for_uid in result_maps.items():
             print(f" - Detection log for uid [{uid.upper()}]")
-            for block, result_for_block in result_maps_for_uid.items():
-                print(f"  > Block {block} detect log decrypting...")
-                for type_, records in result_for_block.items():
-                    # print(f" - {type_} record: { records }")
-                    if len(records) > 1:
-                        result_for_block[type_] = self.decrypt_by_list(records)
-                    else:
-                        print(f"  > {len(records)} record")
+            result_maps_for_uid = result_maps[uid]
+            uid_found_keys = set()
+            for block in result_maps_for_uid:
+                for keyType in 'AB':
+                    records = result_maps_for_uid[block][keyType] if keyType in result_maps_for_uid[block] else []
+                    if len(records) < 1:
+                        continue
+                    print(f"  > Decrypting block {block} key {keyType} detect log...")
+                    result_maps[uid][block][keyType] = self.decrypt_by_list(records, uid_found_keys)
+                    uid_found_keys.update(result_maps[uid][block][keyType])
             print("  > Result ---------------------------")
             for block, result_for_block in result_maps_for_uid.items():
                 for type_, results in result_for_block.items():
