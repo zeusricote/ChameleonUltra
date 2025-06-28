@@ -3,9 +3,20 @@ All notable changes to this project will be documented in this file.
 This project uses the changelog in accordance with [keepchangelog](http://keepachangelog.com/). Please use this to write notable changes, which is not the same as git commit log...
 
 ## [unreleased][unreleased]
+
  - Added commands to dump and clone Mifare tags
+ - Improved slot LED indication when switching slots
+ - Fixed hardnested subprocess call to work in read-only directories
+ - Added configurable long press threshold (200-65535 ms)
  - `hf mf elog --decrypt` skip records with found keys (@taichunmin)
- - Implement a "server" mode in mfkey32v2 to avoid spawning one process per combination (@p-l-)
+ - Added parity bit check for 4th byte in nested auth response
+ - Implemented "server" mode in mfkey32v2 for improved performance (@p-l-)
+ - Added support for offset authentication (backdoor keys) (@zeusricote)
+ - Various bug fixes and improvements (@zeusricote)
+
+## [ v1.0.0][2025-06-11]
+ - Mifare Ultralight - Shadowmode (@AbyssAndromalius)
+ - complete hardnested attack implementation (@zeusricote)
  - Added `firmware/docker-compose.yml` to build firmware in local docker (@taichunmin)
  - Added cmd to acquire nonces for hardnested(Protocol doc need update) (@xianglin1998)
  - Added command to check keys of multiple sectors at once (@taichunmin)
@@ -37,7 +48,7 @@ This project uses the changelog in accordance with [keepchangelog](http://keepac
  - Added PyInstaller support for CLI client (@augustozanellato)
  - Added proper Mifare Ultralight (original, C, EV1) / NTAG (213, 215, 216) emulation (@turbocooler).
 
-## [v2.0.0][2023-09-26]
+## [original v2.0.0][2023-09-26]
  - Added `hw slot nick delete` and DELETE_SLOT_TAG_NICK (@doegox)
  - Changed APP_FW_VER now deduced from git tag vx.y.z (@doegox)
  - Changed initial button wakeup from 4 to 8 seconds (@aramova)
