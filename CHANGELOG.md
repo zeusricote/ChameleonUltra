@@ -4,7 +4,8 @@ This project uses the changelog in accordance with [keepchangelog](http://keepac
 
 ## [v2.0.0][2025-06-28]
  - Added basic script support (@zeusricote)
- - Added configurable wake-up time for button and field detection (1000-60000 ms) (@zeusricote)
+
+
  - Added commands to dump and clone Mifare tags
  - Improved slot LED indication when switching slots
  - Fixed hardnested subprocess call to work in read-only directories

@@ -47,10 +47,6 @@
 #define DATA_CMD_SET_BLE_PAIRING_ENABLE         (1037)
 #define DATA_CMD_GET_LONG_PRESS_THRESHOLD       (1038)
 #define DATA_CMD_SET_LONG_PRESS_THRESHOLD       (1039)
-#define DATA_CMD_GET_WAKEUP_BUTTON_TIME         (1040)
-#define DATA_CMD_SET_WAKEUP_BUTTON_TIME         (1041)
-#define DATA_CMD_GET_WAKEUP_FIELD_TIME          (1042)
-#define DATA_CMD_SET_WAKEUP_FIELD_TIME          (1043)
 
 //
 // ******************************************************************

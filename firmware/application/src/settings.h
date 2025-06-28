@@ -5,7 +5,7 @@
 
 #include "utils.h"
 
-#define SETTINGS_CURRENT_VERSION 7
+#define SETTINGS_CURRENT_VERSION 6
 #define BLE_PAIRING_KEY_LEN 6
 #define DEFAULT_BLE_PAIRING_KEY "123456"  // length must == 6
 
@@ -49,8 +49,6 @@ typedef struct ALIGN_U32 {
 
     // 2 bytes
     uint16_t long_press_threshold; // in ms
-    uint16_t wakeup_button_time;   // in ms
-    uint16_t wakeup_field_time;    // in ms
 
     // 1 byte
     uint8_t reserved1; // see bottom.
@@ -81,11 +79,4 @@ bool settings_get_ble_pairing_enable(void);
 bool settings_get_ble_pairing_enable_first_load(void);
 uint16_t settings_get_long_press_threshold(void);
 void settings_set_long_press_threshold(uint16_t duration);
-
-// Wake-up time settings
-void settings_set_wakeup_button_time(uint16_t time_ms);
-uint16_t settings_get_wakeup_button_time(void);
-void settings_set_wakeup_field_time(uint16_t time_ms);
-uint16_t settings_get_wakeup_field_time(void);
-
 #endif

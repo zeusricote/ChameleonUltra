@@ -55,13 +55,7 @@ void settings_init_ble_pairing_enable_config(void) {
 
 // add on version6
 void settings_init_long_press_threshold_config(void) {
-    config.long_press_threshold = 500; // 500ms default
-}
-
-// add on version7
-void settings_init_wakeup_time_config(void) {
-    config.wakeup_button_time = 8000; // 8s default for button wake-up
-    config.wakeup_field_time = 4000;  // 4s default for field wake-up
+    config.long_press_threshold = 1000; // default 1000ms
 }
 
 void settings_init_config(void) {
@@ -72,7 +66,6 @@ void settings_init_config(void) {
     settings_init_ble_connect_key_config();
     settings_init_ble_pairing_enable_config();
     settings_init_long_press_threshold_config();
-    settings_init_wakeup_time_config();
 }
 
 void settings_migrate(void) {
@@ -312,30 +305,10 @@ uint16_t settings_get_long_press_threshold(void) {
 }
 
 void settings_set_long_press_threshold(uint16_t duration) {
-    if (duration < 100) duration = 100;
-    if (duration > 2000) duration = 2000;
+    // Enforce minimum value of 200ms
+    if (duration < 200) {
+        duration = 200;
+    }
+    // Maximum value is implicitly handled by uint16_t
     config.long_press_threshold = duration;
-    update_config_crc();
-}
-
-void settings_set_wakeup_button_time(uint16_t time_ms) {
-    if (time_ms < 1000) time_ms = 1000;  // Minimum 1 second
-    if (time_ms > 60000) time_ms = 60000; // Maximum 60 seconds
-    config.wakeup_button_time = time_ms;
-    update_config_crc();
-}
-
-uint16_t settings_get_wakeup_button_time(void) {
-    return config.wakeup_button_time;
-}
-
-void settings_set_wakeup_field_time(uint16_t time_ms) {
-    if (time_ms < 1000) time_ms = 1000;  // Minimum 1 second
-    if (time_ms > 60000) time_ms = 60000; // Maximum 60 seconds
-    config.wakeup_field_time = time_ms;
-    update_config_crc();
-}
-
-uint16_t settings_get_wakeup_field_time(void) {
-    return config.wakeup_field_time;
 }
