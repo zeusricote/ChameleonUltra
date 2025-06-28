@@ -3797,3 +3797,33 @@ examples/notes:
             )
         else:
             print(F" [*] {CY}No response{C0}")
+
+
+@root.command('script')
+class ScriptCommand(BaseCLIUnit):
+    """
+    Run commands from a script file
+    """
+    def args_parser(self) -> ArgumentParserNoExit:
+        parser = ArgumentParserNoExit()
+        parser.description = 'Run commands from a script file'
+        parser.add_argument('file', type=str, help='Path to script file')
+        return parser
+
+    def on_exec(self, args: argparse.Namespace):
+        try:
+            with open(args.file, 'r') as f:
+                for line in f:
+                    line = line.strip()
+                    # Skip empty lines and comments
+                    if not line or line.startswith(('#', ';', '//', '--')):
+                        continue
+                    print(f"> {line}")
+                    # Use the existing command processor to execute the line
+                    self.device_com.exec(line)
+                    # Small delay to prevent overwhelming the device
+                    time.sleep(1.0)
+        except FileNotFoundError:
+            print(f"{CR}Error: Script file not found: {args.file}{C0}")
+        except Exception as e:
+            print(f"{CR}Error running script: {str(e)}{C0}")
