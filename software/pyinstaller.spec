@@ -45,7 +45,6 @@ a = Analysis(
         # Include .exe files on Windows from the Release directory
         *([
             ("script/bin/Release/*.exe", "bin/"),
-            ("script/bin/Release/*.dll", "bin/")  # Include any DLLs if they exist
         ] if is_windows else [
             ("script/bin/*", "bin/")
         ]),
