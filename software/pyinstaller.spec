@@ -1,15 +1,19 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+import platform
 
 block_cipher = None
 
+is_windows = platform.system() == 'Windows'
 
 a = Analysis(
     ['script/chameleon_cli_main.py'],
     pathex=[],
-    binaries=[
-        ("script/bin/*", "bin/"),
-    ],
+    binaries=(
+        [("script/bin/*", "bin/"), ("script/bin/*.exe", "bin/")]
+        if is_windows
+        else [("script/bin/*", "bin/")]
+    ),
     datas=[],
     hiddenimports=[],
     hookspath=[],
