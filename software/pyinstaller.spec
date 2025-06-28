@@ -10,11 +10,29 @@ is_windows = platform.system() == 'Windows'
 # Debug info
 print("\n=== PyInstaller Build Debug ===")
 print(f"Current working directory: {os.getcwd()}")
-print(f"Script directory: {os.path.dirname(os.path.abspath(__file__))}")
-print("\nLooking for binary files in script/bin/:")
-bin_files = glob.glob(os.path.join('script', 'bin', '*'))
-for f in bin_files:
-    print(f"- {f} (exists: {os.path.exists(f)})")
+print("\nLooking for binary files:")
+
+# Check Windows paths
+if is_windows:
+    win_path = os.path.join('script', 'bin', 'Release')
+    print(f"Checking Windows path: {win_path}")
+    if os.path.exists(win_path):
+        print("Found Windows Release directory. Contents:")
+        for f in glob.glob(os.path.join(win_path, '*')):
+            print(f"- {f} (exists: {os.path.exists(f)})")
+    else:
+        print(f"Warning: {win_path} does not exist")
+
+# Check standard paths
+std_path = os.path.join('script', 'bin')
+print(f"\nChecking standard path: {std_path}")
+if os.path.exists(std_path):
+    print("Found standard bin directory. Contents:")
+    for f in glob.glob(os.path.join(std_path, '*')):
+        print(f"- {f} (exists: {os.path.exists(f)})")
+else:
+    print(f"Warning: {std_path} does not exist")
+
 print("\n")
 
 a = Analysis(
