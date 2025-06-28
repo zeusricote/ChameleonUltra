@@ -3,6 +3,7 @@ All notable changes to this project will be documented in this file.
 This project uses the changelog in accordance with [keepchangelog](http://keepachangelog.com/). Please use this to write notable changes, which is not the same as git commit log...
 
 ## [unreleased][unreleased]
+ - Added commands to dump and clone Mifare tags
  - `hf mf elog --decrypt` skip records with found keys (@taichunmin)
  - Implement a "server" mode in mfkey32v2 to avoid spawning one process per combination (@p-l-)
  - Added `firmware/docker-compose.yml` to build firmware in local docker (@taichunmin)
