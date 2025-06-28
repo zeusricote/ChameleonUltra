@@ -2,8 +2,8 @@
 All notable changes to this project will be documented in this file.
 This project uses the changelog in accordance with [keepchangelog](http://keepachangelog.com/). Please use this to write notable changes, which is not the same as git commit log...
 
-## [unreleased][unreleased]
-
+## [v2.0.0][2025-06-28]
+ - Added basic script support (@zeusricote)
  - Added configurable wake-up time for button and field detection (1000-60000 ms) (@zeusricote)
  - Added commands to dump and clone Mifare tags
  - Improved slot LED indication when switching slots
