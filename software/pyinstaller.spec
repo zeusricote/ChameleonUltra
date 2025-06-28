@@ -9,11 +9,13 @@ is_windows = platform.system() == 'Windows'
 a = Analysis(
     ['script/chameleon_cli_main.py'],
     pathex=[],
-    binaries=(
-        [("script/bin/*", "bin/"), ("script/bin/*.exe", "bin/")]
-        if is_windows
-        else [("script/bin/*", "bin/")]
-    ),
+    # Include all files in script/bin/
+    # The build will fail if the required binaries are not present
+    binaries=[
+        ("script/bin/*", "bin/"),
+        # Include .exe files on Windows if they exist
+        *([("script/bin/*.exe", "bin/")] if is_windows else []),
+    ],
     datas=[],
     hiddenimports=[],
     hookspath=[],
