@@ -233,6 +233,36 @@ static data_frame_tx_t *cmd_processor_set_long_press_threshold(uint16_t cmd, uin
     return data_frame_make(cmd, STATUS_SUCCESS, 0, NULL);
 }
 
+static data_frame_tx_t *cmd_processor_get_wakeup_button_time(uint16_t cmd, uint16_t status, uint16_t length, uint8_t *data) {
+    uint16_t time_ms = settings_get_wakeup_button_time();
+    uint8_t resp_data[2] = {(uint8_t)(time_ms >> 8), (uint8_t)(time_ms & 0xFF)};
+    return data_frame_make(cmd, STATUS_SUCCESS, sizeof(resp_data), resp_data);
+}
+
+static data_frame_tx_t *cmd_processor_set_wakeup_button_time(uint16_t cmd, uint16_t status, uint16_t length, uint8_t *data) {
+    if (length != 2) {
+        return data_frame_make(cmd, STATUS_PAR_ERR, 0, NULL);
+    }
+    uint16_t time_ms = ((uint16_t)data[0] << 8) | data[1];
+    settings_set_wakeup_button_time(time_ms);
+    return data_frame_make(cmd, STATUS_SUCCESS, 0, NULL);
+}
+
+static data_frame_tx_t *cmd_processor_get_wakeup_field_time(uint16_t cmd, uint16_t status, uint16_t length, uint8_t *data) {
+    uint16_t time_ms = settings_get_wakeup_field_time();
+    uint8_t resp_data[2] = {(uint8_t)(time_ms >> 8), (uint8_t)(time_ms & 0xFF)};
+    return data_frame_make(cmd, STATUS_SUCCESS, sizeof(resp_data), resp_data);
+}
+
+static data_frame_tx_t *cmd_processor_set_wakeup_field_time(uint16_t cmd, uint16_t status, uint16_t length, uint8_t *data) {
+    if (length != 2) {
+        return data_frame_make(cmd, STATUS_PAR_ERR, 0, NULL);
+    }
+    uint16_t time_ms = ((uint16_t)data[0] << 8) | data[1];
+    settings_set_wakeup_field_time(time_ms);
+    return data_frame_make(cmd, STATUS_SUCCESS, 0, NULL);
+}
+
 #if defined(PROJECT_CHAMELEON_ULTRA)
 
 static data_frame_tx_t *cmd_processor_hf14a_scan(uint16_t cmd, uint16_t status, uint16_t length, uint8_t *data) {
@@ -1360,6 +1390,10 @@ static cmd_data_map_t m_data_cmd_map[] = {
     {    DATA_CMD_SET_BLE_PAIRING_ENABLE,       NULL,                        cmd_processor_set_ble_pairing_enable,        NULL                   },
     {    DATA_CMD_GET_LONG_PRESS_THRESHOLD,     NULL,                        cmd_processor_get_long_press_threshold,      NULL                   },
     {    DATA_CMD_SET_LONG_PRESS_THRESHOLD,     NULL,                        cmd_processor_set_long_press_threshold,      NULL                   },
+    {    DATA_CMD_GET_WAKEUP_BUTTON_TIME,       NULL,                        cmd_processor_get_wakeup_button_time,        NULL                   },
+    {    DATA_CMD_SET_WAKEUP_BUTTON_TIME,       NULL,                        cmd_processor_set_wakeup_button_time,        NULL                   },
+    {    DATA_CMD_GET_WAKEUP_FIELD_TIME,        NULL,                        cmd_processor_get_wakeup_field_time,         NULL                   },
+    {    DATA_CMD_SET_WAKEUP_FIELD_TIME,        NULL,                        cmd_processor_set_wakeup_field_time,         NULL                   },
 
 #if defined(PROJECT_CHAMELEON_ULTRA)
 

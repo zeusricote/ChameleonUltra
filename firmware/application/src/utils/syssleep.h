@@ -2,10 +2,11 @@
 #define SYS_SLEEP_H__
 
 #include <stdint.h>
+#include "settings.h"
 
 //           Wake up equipment
-#define SLEEP_DELAY_MS_BUTTON_WAKEUP            8000    // The sleep delay of the button awakened
-#define SLEEP_DELAY_MS_FIELD_WAKEUP             4000    // The sleep delay (including high and low frequencies) of the field wake -up (including high and low frequency)
+#define SLEEP_DELAY_MS_BUTTON_WAKEUP            (settings_get_wakeup_button_time())    // The sleep delay of the button awakened
+#define SLEEP_DELAY_MS_FIELD_WAKEUP             (settings_get_wakeup_field_time())     // The sleep delay (including high and low frequencies) of the field wake -up (including high and low frequency)
 #define SLEEP_DELAY_MS_FIRST_POWER              1000    // The sleep delay of the first power supply (access to the battery)
 
 //           The operating state is delayed
