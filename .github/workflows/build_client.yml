@@ -56,6 +56,26 @@ jobs:
           cd out
           cmake ..
           cmake --build . --config Release
+      - name: List script/bin directory contents (Windows)
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          Write-Host "Listing script/bin/ contents:"
+          if (Test-Path "software/script/bin") {
+            Get-ChildItem -Recurse -Path "software/script/bin" | Select-Object FullName
+          } else {
+            Write-Host "script/bin/ directory does not exist"
+          }
+          Write-Host "`nListing parent directory:"
+          Get-ChildItem -Path "software/script" | Select-Object Name
+      - name: List script/bin directory contents (Linux/Mac)
+        if: matrix.os != 'windows-latest'
+        run: |
+          echo "Listing script/bin/ contents:"
+          ls -la software/script/bin/ || echo "script/bin/ directory does not exist"
+          echo -e "\nListing parent directory:"
+          ls -la software/script/
+
       - name: Run PyInstaller
         run: |
           cd software

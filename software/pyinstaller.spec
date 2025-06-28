@@ -1,10 +1,21 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+import os
 import platform
+import glob
 
 block_cipher = None
-
 is_windows = platform.system() == 'Windows'
+
+# Debug info
+print("\n=== PyInstaller Build Debug ===")
+print(f"Current working directory: {os.getcwd()}")
+print(f"Script directory: {os.path.dirname(os.path.abspath(__file__))}")
+print("\nLooking for binary files in script/bin/:")
+bin_files = glob.glob(os.path.join('script', 'bin', '*'))
+for f in bin_files:
+    print(f"- {f} (exists: {os.path.exists(f)})")
+print("\n")
 
 a = Analysis(
     ['script/chameleon_cli_main.py'],
@@ -13,8 +24,13 @@ a = Analysis(
     # The build will fail if the required binaries are not present
     binaries=[
         ("script/bin/*", "bin/"),
-        # Include .exe files on Windows if they exist
-        *([("script/bin/*.exe", "bin/")] if is_windows else []),
+        # Include .exe files on Windows from the Release directory
+        *([
+            ("script/bin/Release/*.exe", "bin/"),
+            ("script/bin/Release/*.dll", "bin/")  # Include any DLLs if they exist
+        ] if is_windows else [
+            ("script/bin/*", "bin/")
+        ]),
     ],
     datas=[],
     hiddenimports=[],

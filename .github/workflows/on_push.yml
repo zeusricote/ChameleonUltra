@@ -11,7 +11,8 @@ jobs:
       contents: read
     uses: ./.github/workflows/build_firmware.yml
   client_pipeline:
-    name: Build Firmware
+    name: Build Client
+    needs: firmware_pipeline
     uses: ./.github/workflows/build_client.yml
   create_dev_release:
     permissions:
